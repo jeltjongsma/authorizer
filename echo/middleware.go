@@ -35,7 +35,7 @@ func AuthorizeRoles(authorizer authorizer.IAuthorizer, roles []authorizer.Role, 
 			// get user id from context
 			id, err := userIdFrom(c)
 			if err != nil {
-				echo.NewHTTPError(401, "Unauthorized")
+				return echo.NewHTTPError(401, "Unauthorized")
 			}
 
 			switch mode {
@@ -70,7 +70,7 @@ func AuthorizePermissions(authorizer authorizer.IAuthorizer, permissions []autho
 			// get user id from context
 			id, err := userIdFrom(c)
 			if err != nil {
-				echo.NewHTTPError(401, "Unauthorized")
+				return echo.NewHTTPError(401, "Unauthorized")
 			}
 
 			switch mode {

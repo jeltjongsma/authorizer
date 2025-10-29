@@ -127,7 +127,7 @@ func Test_AuthorizeRoles_MatchAny(t *testing.T) {
 	roleA := client.CreateRole("a")
 	roleB := client.CreateRole("b")
 
-	// users need role A and B
+	// users need role A or B
 	authzRoles := AuthorizeRoles(authz, []authorizer.Role{roleA, roleB}, MatchAny)(EchoDummy)
 
 	c := EchoContext()
@@ -168,6 +168,30 @@ func Test_AuthorizeRoles_MatchAny(t *testing.T) {
 	}
 }
 
+func Test_AuthorizeRoles_InvalidUserId(t *testing.T) {
+	authz := authorizer.InitInMemAuthorizer()
+
+	authzRoles := AuthorizeRoles(authz, []authorizer.Role{}, MatchAny)(EchoDummy)
+
+	c := EchoContext()
+	c.Set("user_id", "not an id")
+
+	err := authzRoles(c)
+	if err == nil {
+		t.Fatalf("expected err, got nil")
+	}
+
+	httpErr, ok := err.(*echo.HTTPError)
+	if !ok {
+		t.Errorf("expected HTTP error, got %t", err)
+	}
+
+	// expect 401 Unauthorized
+	if httpErr.Code != 401 {
+		t.Errorf("expected 401, got %v", httpErr.Code)
+	}
+}
+
 func Test_AuthorizePermissions_MatchAll(t *testing.T) {
 	authz := authorizer.InitInMemAuthorizer()
 
@@ -180,7 +204,7 @@ func Test_AuthorizePermissions_MatchAll(t *testing.T) {
 	permissionA := client.CreatePermission("a", "r")
 	permissionB := client.CreatePermission("b", "r")
 
-	// users need role A and B
+	// users need permission A and B
 	authzRoles := AuthorizePermissions(authz, []authorizer.Permission{permissionA, permissionB}, MatchAll)(EchoDummy)
 
 	c := EchoContext()
@@ -244,7 +268,7 @@ func Test_AuthorizePermissions_MatchAny(t *testing.T) {
 	permissionA := client.CreatePermission("a", "r")
 	permissionB := client.CreatePermission("b", "r")
 
-	// users need role A and B
+	// users need permission A or B
 	authzRoles := AuthorizePermissions(authz, []authorizer.Permission{permissionA, permissionB}, MatchAny)(EchoDummy)
 
 	c := EchoContext()
