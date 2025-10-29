@@ -77,3 +77,31 @@ func Test_Client_Allow(t *testing.T) {
 		t.Errorf("expected false, got true")
 	}
 }
+
+func Test_Client_CreateRole(t *testing.T) {
+	c := &Client{
+		app:        "app",
+		authorizer: &InMemAuthorizer{},
+		ttl:        time.Second * 5,
+	}
+
+	role := c.CreateRole("role")
+
+	if role.App != "app" || role.Role != "role" {
+		t.Errorf("expected 'app role', got %v", role)
+	}
+}
+
+func Test_Client_CreatePermission(t *testing.T) {
+	c := &Client{
+		app:        "app",
+		authorizer: &InMemAuthorizer{},
+		ttl:        time.Second * 5,
+	}
+
+	permission := c.CreatePermission("action", "resource")
+
+	if permission.App != "app" || permission.Action != "action" || permission.Resource != "resource" {
+		t.Errorf("expected 'app action resource' got, %v", permission)
+	}
+}
