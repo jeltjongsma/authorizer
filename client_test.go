@@ -1,0 +1,79 @@
+package authorizer
+
+import (
+	"testing"
+	"time"
+)
+
+func Test_Client_HasRole(t *testing.T) {
+	authz := &InMemAuthorizer{
+		roles:       map[int][]Role{},
+		permissions: map[int][]Permission{},
+	}
+
+	role := Role{
+		App:  "app",
+		Role: "role",
+	}
+
+	authz.AddRole(1, role)
+
+	c := &Client{
+		app:        "app",
+		authorizer: authz,
+		ttl:        time.Second * 5,
+	}
+
+	decision := c.HasRole(1, "role")
+	if !decision.Allow {
+		t.Fatalf("expected true, got false")
+	}
+	if decision.ExpiresIn != time.Second*5 {
+		t.Errorf("expected 5 seconds, got %v", decision.ExpiresIn)
+	}
+
+	if decision := c.HasRole(1, "not role"); decision.Allow {
+		t.Errorf("expected false, got true")
+	}
+
+	if decision := c.HasRole(2, "role"); decision.Allow {
+		t.Errorf("expected false, got true")
+	}
+}
+
+func Test_Client_Allow(t *testing.T) {
+	authz := &InMemAuthorizer{
+		roles:       map[int][]Role{},
+		permissions: map[int][]Permission{},
+	}
+
+	permission := Permission{
+		App:      "app",
+		Action:   "action",
+		Resource: "resource",
+	}
+
+	authz.AddPermission(1, permission)
+
+	c := &Client{
+		app:        "app",
+		authorizer: authz,
+		ttl:        time.Second * 5,
+	}
+
+	decision := c.Allow(1, "action", "resource")
+	if !decision.Allow {
+		t.Fatalf("expected true, got false")
+	}
+	if decision.ExpiresIn != time.Second*5 {
+		t.Errorf("expected 5 seconds, got %v", decision.ExpiresIn)
+	}
+
+	if decision := c.Allow(1, "not action", "not resource"); decision.Allow {
+		t.Errorf("expected false, got true")
+	}
+
+	if decision := c.Allow(2, "action", "resource"); decision.Allow {
+		t.Errorf("expected false, got true")
+	}
+}
