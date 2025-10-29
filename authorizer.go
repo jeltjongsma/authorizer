@@ -18,6 +18,13 @@ type InMemAuthorizer struct {
 	mu sync.RWMutex
 }
 
+func InitInMemAuthorizer() *InMemAuthorizer {
+	return &InMemAuthorizer{
+		roles:       map[int][]Role{},
+		permissions: map[int][]Permission{},
+	}
+}
+
 func (authz *InMemAuthorizer) HasRole(id int, role Role) *Decision {
 	authz.mu.RLock()
 	defer authz.mu.RUnlock()

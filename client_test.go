@@ -6,7 +6,7 @@ import (
 )
 
 func Test_Client_HasRole(t *testing.T) {
-	authz := &InMemAuthorizer{
+	Authz := &InMemAuthorizer{
 		roles:       map[int][]Role{},
 		permissions: map[int][]Permission{},
 	}
@@ -16,12 +16,12 @@ func Test_Client_HasRole(t *testing.T) {
 		Role: "role",
 	}
 
-	authz.AddRole(1, role)
+	Authz.AddRole(1, role)
 
 	c := &Client{
-		app:        "app",
-		authorizer: authz,
-		ttl:        time.Second * 5,
+		App:        "app",
+		Authorizer: Authz,
+		Ttl:        time.Second * 5,
 	}
 
 	decision := c.HasRole(1, "role")
@@ -42,7 +42,7 @@ func Test_Client_HasRole(t *testing.T) {
 }
 
 func Test_Client_Allow(t *testing.T) {
-	authz := &InMemAuthorizer{
+	Authz := &InMemAuthorizer{
 		roles:       map[int][]Role{},
 		permissions: map[int][]Permission{},
 	}
@@ -53,12 +53,12 @@ func Test_Client_Allow(t *testing.T) {
 		Resource: "resource",
 	}
 
-	authz.AddPermission(1, permission)
+	Authz.AddPermission(1, permission)
 
 	c := &Client{
-		app:        "app",
-		authorizer: authz,
-		ttl:        time.Second * 5,
+		App:        "app",
+		Authorizer: Authz,
+		Ttl:        time.Second * 5,
 	}
 
 	decision := c.Allow(1, "action", "resource")
@@ -80,28 +80,28 @@ func Test_Client_Allow(t *testing.T) {
 
 func Test_Client_CreateRole(t *testing.T) {
 	c := &Client{
-		app:        "app",
-		authorizer: &InMemAuthorizer{},
-		ttl:        time.Second * 5,
+		App:        "app",
+		Authorizer: &InMemAuthorizer{},
+		Ttl:        time.Second * 5,
 	}
 
 	role := c.CreateRole("role")
 
 	if role.App != "app" || role.Role != "role" {
-		t.Errorf("expected 'app role', got %v", role)
+		t.Errorf("expected 'App role', got %v", role)
 	}
 }
 
 func Test_Client_CreatePermission(t *testing.T) {
 	c := &Client{
-		app:        "app",
-		authorizer: &InMemAuthorizer{},
-		ttl:        time.Second * 5,
+		App:        "app",
+		Authorizer: &InMemAuthorizer{},
+		Ttl:        time.Second * 5,
 	}
 
 	permission := c.CreatePermission("action", "resource")
 
 	if permission.App != "app" || permission.Action != "action" || permission.Resource != "resource" {
-		t.Errorf("expected 'app action resource' got, %v", permission)
+		t.Errorf("expected 'App action resource' got, %v", permission)
 	}
 }

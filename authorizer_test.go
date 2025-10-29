@@ -5,11 +5,15 @@ import (
 	"testing"
 )
 
-func Test_InMem_AddRole(t *testing.T) {
-	authz := &InMemAuthorizer{
-		roles:       map[int][]Role{},
-		permissions: map[int][]Permission{},
+func Test_InMem_Init(t *testing.T) {
+	authz := InitInMemAuthorizer()
+	if authz.roles == nil || authz.permissions == nil {
+		t.Errorf("expected fields initialised, got nil")
 	}
+}
+
+func Test_InMem_AddRole(t *testing.T) {
+	authz := InitInMemAuthorizer()
 
 	role := Role{
 		App:  "app",
@@ -34,10 +38,7 @@ func Test_InMem_AddRole(t *testing.T) {
 }
 
 func Test_InMem_AddPermission(t *testing.T) {
-	authz := &InMemAuthorizer{
-		roles:       map[int][]Role{},
-		permissions: map[int][]Permission{},
-	}
+	authz := InitInMemAuthorizer()
 
 	permission := Permission{
 		App:      "app",
@@ -63,10 +64,7 @@ func Test_InMem_AddPermission(t *testing.T) {
 }
 
 func Test_InMem_HasRole(t *testing.T) {
-	authz := &InMemAuthorizer{
-		roles:       map[int][]Role{},
-		permissions: map[int][]Permission{},
-	}
+	authz := InitInMemAuthorizer()
 
 	role := Role{
 		App:  "app",
@@ -85,10 +83,7 @@ func Test_InMem_HasRole(t *testing.T) {
 }
 
 func Test_InMem_Allow(t *testing.T) {
-	authz := &InMemAuthorizer{
-		roles:       map[int][]Role{},
-		permissions: map[int][]Permission{},
-	}
+	authz := InitInMemAuthorizer()
 
 	permission := Permission{
 		App:      "app",
