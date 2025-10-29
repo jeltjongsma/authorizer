@@ -1,6 +1,10 @@
 package echo
 
+// TODO: Make single `Authorize` function
+
 import (
+	"errors"
+
 	"github.com/jeltjongsma/authorizer"
 	"github.com/labstack/echo/v4"
 )
@@ -14,13 +18,25 @@ const (
 	MatchAny
 )
 
+func userIdFrom(c echo.Context) (int, error) {
+	idUnchecked := c.Get("user_id")
+	id, ok := idUnchecked.(int)
+	if !ok {
+		return 0, errors.New("id missing or not of type int")
+	}
+	return id, nil
+}
+
 // AuthorizeRoles takes in an authorizer, a set of roles and a match mode,
 // and will abort the request if the user does not meet the role criteria.
 func AuthorizeRoles(authorizer authorizer.IAuthorizer, roles []authorizer.Role, mode MatchMode) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// get user id from context
-			id := c.Get("user_id").(int) // FIXME: Will panic on missing or non-int
+			id, err := userIdFrom(c)
+			if err != nil {
+				echo.NewHTTPError(401, "Unauthorized")
+			}
 
 			switch mode {
 			// user requires all roles
@@ -52,7 +68,10 @@ func AuthorizePermissions(authorizer authorizer.IAuthorizer, permissions []autho
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// get user id from context
-			id := c.Get("user_id").(int) // FIXME: Will panic on missing or non-int
+			id, err := userIdFrom(c)
+			if err != nil {
+				echo.NewHTTPError(401, "Unauthorized")
+			}
 
 			switch mode {
 			// user requires all permissions

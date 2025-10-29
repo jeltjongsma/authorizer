@@ -20,6 +20,37 @@ func EchoContext() echo.Context {
 	return e.NewContext(req, rec)
 }
 
+func Test_userIdFrom(t *testing.T) {
+	tests := []struct {
+		inp     any
+		wantErr bool
+	}{
+		{1, false},
+		{-1, false},
+		{"not an id", true},
+	}
+
+	c := EchoContext()
+
+	for _, tt := range tests {
+		c.Set("user_id", tt.inp)
+		id, err := userIdFrom(c)
+		if tt.wantErr {
+			if err == nil {
+				t.Errorf("expected err, got nil")
+			}
+		} else {
+			if err != nil {
+				t.Fatalf("expected nil, got %v", err)
+			}
+			if id != tt.inp {
+				t.Errorf("expected %d, got %d", tt.inp, id)
+			}
+		}
+
+	}
+}
+
 func Test_AuthorizeRoles_MatchAll(t *testing.T) {
 	authz := authorizer.InitInMemAuthorizer()
 
