@@ -5,4 +5,3 @@ A simple Go authorizer framework.
 ```
 go get github.com/jeltjongsma/authorizer
 ```
-
