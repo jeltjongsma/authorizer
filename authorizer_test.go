@@ -3,24 +3,25 @@ package authorizer
 import (
 	"reflect"
 	"testing"
+	"time"
 )
 
 func Test_InMem_Init(t *testing.T) {
-	authz := InitInMemAuthorizer()
+	authz := InitInMemAuthorizer(time.Second * 5)
 	if authz.roles == nil || authz.permissions == nil {
 		t.Errorf("expected fields initialised, got nil")
 	}
 }
 
-func Test_InMem_AddRole(t *testing.T) {
-	authz := InitInMemAuthorizer()
+func Test_InMem_AddRoleTo(t *testing.T) {
+	authz := InitInMemAuthorizer(time.Second * 5)
 
 	role := Role{
 		App:  "app",
 		Role: "role",
 	}
 
-	if !authz.AddRole(1, role) {
+	if !authz.AddRoleTo(1, role) {
 		t.Fatalf("expected true, got false")
 	}
 
@@ -28,7 +29,7 @@ func Test_InMem_AddRole(t *testing.T) {
 		t.Errorf("expected %v, got %v", role, authz.roles[1][0])
 	}
 
-	if authz.AddRole(1, role) {
+	if authz.AddRoleTo(1, role) {
 		t.Errorf("expected false, got true")
 	}
 
@@ -37,8 +38,8 @@ func Test_InMem_AddRole(t *testing.T) {
 	}
 }
 
-func Test_InMem_AddPermission(t *testing.T) {
-	authz := InitInMemAuthorizer()
+func Test_InMem_AddPermissionTo(t *testing.T) {
+	authz := InitInMemAuthorizer(time.Second * 5)
 
 	permission := Permission{
 		App:      "app",
@@ -46,7 +47,7 @@ func Test_InMem_AddPermission(t *testing.T) {
 		Resource: "resource",
 	}
 
-	if !authz.AddPermission(1, permission) {
+	if !authz.AddPermissionTo(1, permission) {
 		t.Fatalf("expected true, got false")
 	}
 
@@ -54,7 +55,7 @@ func Test_InMem_AddPermission(t *testing.T) {
 		t.Errorf("expected %v, got %v", permission, authz.permissions[1][0])
 	}
 
-	if authz.AddPermission(1, permission) {
+	if authz.AddPermissionTo(1, permission) {
 		t.Errorf("expected false, got true")
 	}
 
@@ -64,14 +65,14 @@ func Test_InMem_AddPermission(t *testing.T) {
 }
 
 func Test_InMem_HasRole(t *testing.T) {
-	authz := InitInMemAuthorizer()
+	authz := InitInMemAuthorizer(time.Second * 5)
 
 	role := Role{
 		App:  "app",
 		Role: "role",
 	}
 
-	authz.AddRole(1, role)
+	authz.AddRoleTo(1, role)
 
 	if decision := authz.HasRole(1, role); !decision.Allow {
 		t.Errorf("expected true, got false")
@@ -83,7 +84,7 @@ func Test_InMem_HasRole(t *testing.T) {
 }
 
 func Test_InMem_Allow(t *testing.T) {
-	authz := InitInMemAuthorizer()
+	authz := InitInMemAuthorizer(time.Second * 5)
 
 	permission := Permission{
 		App:      "app",
@@ -91,7 +92,7 @@ func Test_InMem_Allow(t *testing.T) {
 		Resource: "resource",
 	}
 
-	authz.AddPermission(1, permission)
+	authz.AddPermissionTo(1, permission)
 
 	if decision := authz.Allow(1, permission); !decision.Allow {
 		t.Errorf("expected true, got false")

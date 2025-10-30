@@ -1,9 +1,8 @@
 package echo
 
-// TODO: Make single `Authorize` function
-
 import (
 	"errors"
+	"os"
 
 	"github.com/jeltjongsma/authorizer"
 	"github.com/labstack/echo/v4"
@@ -19,17 +18,17 @@ const (
 )
 
 func userIdFrom(c echo.Context) (int, error) {
-	idUnchecked := c.Get("user_id")
+	idUnchecked := c.Get(os.Getenv("AUTHORIZER_USER_ID"))
 	id, ok := idUnchecked.(int)
 	if !ok {
-		return 0, errors.New("id missing or not of type int")
+		return 0, errors.New("id missing or not int type")
 	}
 	return id, nil
 }
 
 // AuthorizeRoles takes in an authorizer, a set of roles and a match mode,
 // and will abort the request if the user does not meet the role criteria.
-func AuthorizeRoles(authorizer authorizer.IAuthorizer, roles []authorizer.Role, mode MatchMode) echo.MiddlewareFunc {
+func AuthorizeRoles(authorizer authorizer.Authorizer, roles []authorizer.Role, mode MatchMode) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// get user id from context
@@ -64,7 +63,7 @@ func AuthorizeRoles(authorizer authorizer.IAuthorizer, roles []authorizer.Role, 
 
 // AuthorizeRoles takes in an authorizer, a set of permissions and a match mode,
 // and will abort the request if a user does not meet the permission criteria.
-func AuthorizePermissions(authorizer authorizer.IAuthorizer, permissions []authorizer.Permission, mode MatchMode) echo.MiddlewareFunc {
+func AuthorizePermissions(authorizer authorizer.Authorizer, permissions []authorizer.Permission, mode MatchMode) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// get user id from context

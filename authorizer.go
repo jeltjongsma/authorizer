@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"time"
 )
 
-type IAuthorizer interface {
+// Authorizer interface functions return a `Decision`.
+type Authorizer interface {
 	HasRole(id int, role Role) *Decision
 	Allow(id int, permission Permission) *Decision
 }
@@ -14,14 +16,16 @@ type IAuthorizer interface {
 type InMemAuthorizer struct {
 	roles       map[int][]Role
 	permissions map[int][]Permission
+	ttl         time.Duration
 
 	mu sync.RWMutex
 }
 
-func InitInMemAuthorizer() *InMemAuthorizer {
+func InitInMemAuthorizer(ttl time.Duration) *InMemAuthorizer {
 	return &InMemAuthorizer{
 		roles:       map[int][]Role{},
 		permissions: map[int][]Permission{},
+		ttl:         ttl,
 	}
 }
 
@@ -33,8 +37,9 @@ func (authz *InMemAuthorizer) HasRole(id int, role Role) *Decision {
 		for _, r := range roles {
 			if reflect.DeepEqual(r, role) {
 				return &Decision{
-					Allow:  true,
-					Reason: fmt.Sprintf("%d has role '%s'", id, role.Role),
+					Allow:     true,
+					Reason:    fmt.Sprintf("%d has role '%s'", id, role.Role),
+					ExpiresIn: authz.ttl,
 				}
 			}
 		}
@@ -54,8 +59,9 @@ func (authz *InMemAuthorizer) Allow(id int, permission Permission) *Decision {
 		for _, p := range permissions {
 			if reflect.DeepEqual(p, permission) {
 				return &Decision{
-					Allow:  true,
-					Reason: fmt.Sprintf("%d can perform '%s' on '%s'", id, permission.Action, permission.Resource),
+					Allow:     true,
+					Reason:    fmt.Sprintf("%d can perform '%s' on '%s'", id, permission.Action, permission.Resource),
+					ExpiresIn: authz.ttl,
 				}
 			}
 		}
@@ -67,7 +73,7 @@ func (authz *InMemAuthorizer) Allow(id int, permission Permission) *Decision {
 	}
 }
 
-func (authz *InMemAuthorizer) AddRole(id int, role Role) (added bool) {
+func (authz *InMemAuthorizer) AddRoleTo(id int, role Role) (added bool) {
 	authz.mu.Lock()
 	defer authz.mu.Unlock()
 
@@ -85,7 +91,7 @@ func (authz *InMemAuthorizer) AddRole(id int, role Role) (added bool) {
 	return true
 }
 
-func (authz *InMemAuthorizer) AddPermission(id int, permission Permission) (added bool) {
+func (authz *InMemAuthorizer) AddPermissionTo(id int, permission Permission) (added bool) {
 	authz.mu.Lock()
 	defer authz.mu.Unlock()
 

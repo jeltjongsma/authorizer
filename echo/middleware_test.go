@@ -2,6 +2,7 @@ package echo
 
 import (
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -18,6 +19,12 @@ func EchoContext() echo.Context {
 	req := httptest.NewRequest("GET", "/", nil)
 	rec := httptest.NewRecorder()
 	return e.NewContext(req, rec)
+}
+
+func TestMain(m *testing.M) {
+	os.Setenv("AUTHORIZER_USER_ID", "user_id")
+	code := m.Run()
+	os.Exit(code)
 }
 
 func Test_userIdFrom(t *testing.T) {
@@ -52,12 +59,10 @@ func Test_userIdFrom(t *testing.T) {
 }
 
 func Test_AuthorizeRoles_MatchAll(t *testing.T) {
-	authz := authorizer.InitInMemAuthorizer()
+	authz := authorizer.InitInMemAuthorizer(time.Second * 5)
 
 	client := &authorizer.Client{
-		App:        "app",
-		Authorizer: authz,
-		Ttl:        5 * time.Second,
+		App: "app",
 	}
 
 	roleA := client.CreateRole("a")
@@ -69,8 +74,8 @@ func Test_AuthorizeRoles_MatchAll(t *testing.T) {
 	c := EchoContext()
 
 	// match both (pass)
-	authz.AddRole(0, roleA)
-	authz.AddRole(0, roleB)
+	authz.AddRoleTo(0, roleA)
+	authz.AddRoleTo(0, roleB)
 	c.Set("user_id", 0)
 
 	if err := authzRoles(c); err != nil {
@@ -78,7 +83,7 @@ func Test_AuthorizeRoles_MatchAll(t *testing.T) {
 	}
 
 	// only one match (fail)
-	authz.AddRole(1, roleB)
+	authz.AddRoleTo(1, roleB)
 	c.Set("user_id", 1)
 
 	err := authzRoles(c)
@@ -116,12 +121,10 @@ func Test_AuthorizeRoles_MatchAll(t *testing.T) {
 }
 
 func Test_AuthorizeRoles_MatchAny(t *testing.T) {
-	authz := authorizer.InitInMemAuthorizer()
+	authz := authorizer.InitInMemAuthorizer(time.Second * 5)
 
 	client := &authorizer.Client{
-		App:        "app",
-		Authorizer: authz,
-		Ttl:        5 * time.Second,
+		App: "app",
 	}
 
 	roleA := client.CreateRole("a")
@@ -133,7 +136,7 @@ func Test_AuthorizeRoles_MatchAny(t *testing.T) {
 	c := EchoContext()
 
 	// one match (pass)
-	authz.AddRole(0, roleA)
+	authz.AddRoleTo(0, roleA)
 	c.Set("user_id", 0)
 
 	if err := authzRoles(c); err != nil {
@@ -141,8 +144,8 @@ func Test_AuthorizeRoles_MatchAny(t *testing.T) {
 	}
 
 	// both match (pass)
-	authz.AddRole(1, roleA)
-	authz.AddRole(1, roleB)
+	authz.AddRoleTo(1, roleA)
+	authz.AddRoleTo(1, roleB)
 	c.Set("user_id", 1)
 
 	if err := authzRoles(c); err != nil {
@@ -169,7 +172,7 @@ func Test_AuthorizeRoles_MatchAny(t *testing.T) {
 }
 
 func Test_AuthorizeRoles_InvalidUserId(t *testing.T) {
-	authz := authorizer.InitInMemAuthorizer()
+	authz := authorizer.InitInMemAuthorizer(time.Second * 5)
 
 	authzRoles := AuthorizeRoles(authz, []authorizer.Role{}, MatchAny)(EchoDummy)
 
@@ -193,12 +196,10 @@ func Test_AuthorizeRoles_InvalidUserId(t *testing.T) {
 }
 
 func Test_AuthorizePermissions_MatchAll(t *testing.T) {
-	authz := authorizer.InitInMemAuthorizer()
+	authz := authorizer.InitInMemAuthorizer(time.Second * 5)
 
 	client := &authorizer.Client{
-		App:        "app",
-		Authorizer: authz,
-		Ttl:        5 * time.Second,
+		App: "app",
 	}
 
 	permissionA := client.CreatePermission("a", "r")
@@ -210,8 +211,8 @@ func Test_AuthorizePermissions_MatchAll(t *testing.T) {
 	c := EchoContext()
 
 	// match both (pass)
-	authz.AddPermission(0, permissionA)
-	authz.AddPermission(0, permissionB)
+	authz.AddPermissionTo(0, permissionA)
+	authz.AddPermissionTo(0, permissionB)
 	c.Set("user_id", 0)
 
 	if err := authzRoles(c); err != nil {
@@ -219,7 +220,7 @@ func Test_AuthorizePermissions_MatchAll(t *testing.T) {
 	}
 
 	// only one match (fail)
-	authz.AddPermission(1, permissionB)
+	authz.AddPermissionTo(1, permissionB)
 	c.Set("user_id", 1)
 
 	err := authzRoles(c)
@@ -257,12 +258,10 @@ func Test_AuthorizePermissions_MatchAll(t *testing.T) {
 }
 
 func Test_AuthorizePermissions_MatchAny(t *testing.T) {
-	authz := authorizer.InitInMemAuthorizer()
+	authz := authorizer.InitInMemAuthorizer(time.Second * 5)
 
 	client := &authorizer.Client{
-		App:        "app",
-		Authorizer: authz,
-		Ttl:        5 * time.Second,
+		App: "app",
 	}
 
 	permissionA := client.CreatePermission("a", "r")
@@ -274,8 +273,8 @@ func Test_AuthorizePermissions_MatchAny(t *testing.T) {
 	c := EchoContext()
 
 	// match both (pass)
-	authz.AddPermission(0, permissionA)
-	authz.AddPermission(0, permissionB)
+	authz.AddPermissionTo(0, permissionA)
+	authz.AddPermissionTo(0, permissionB)
 	c.Set("user_id", 0)
 
 	if err := authzRoles(c); err != nil {
@@ -283,7 +282,7 @@ func Test_AuthorizePermissions_MatchAny(t *testing.T) {
 	}
 
 	// one match (pass)
-	authz.AddPermission(1, permissionB)
+	authz.AddPermissionTo(1, permissionB)
 	c.Set("user_id", 1)
 
 	if err := authzRoles(c); err != nil {
